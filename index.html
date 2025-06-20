@@ -1,0 +1,2833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Enhanced 3D Racing Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        body {
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            color: white;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        #gameCanvas {
+            background-color: #1a1a1a;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #uiPanel {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 15px;
+            pointer-events: none;
+            z-index: 5;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .ui-box {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        #coinDisplay {
+            color: gold;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 5;
+            gap: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .control-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .control-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            color: white;
+            -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s, background-color 0.1s;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.92);
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        #brakeBtn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        #boostBtn {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+        
+        #driftBtn {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+        
+        #boostGauge {
+            width: 80px;
+            height: 12px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        #boostFill {
+            height: 100%;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+            width: 100%;
+            border-radius: 6px;
+            transition: width 0.2s;
+        }
+        
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.9) 0%, rgba(26, 26, 46, 0.95) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn {
+            margin-top: 20px;
+            padding: 14px 30px;
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 20px;
+            cursor: pointer;
+            min-width: 200px;
+            font-weight: bold;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, background-color 0.2s;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(30deg);
+            transition: all 0.6s;
+            pointer-events: none;
+        }
+        
+        .btn:hover::after {
+            transform: rotate(30deg) translate(50%, 50%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #3498db 0%, #1565C0 100%);
+        }
+        
+        .btn-premium {
+            background: linear-gradient(135deg, #9b59b6 0%, #6a1b9a 100%);
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(45deg, #4CAF50, #3498db, #9b59b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin: 15px 0;
+            color: #3498db;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: #ddd;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        
+        #garageScreen {
+            display: none;
+        }
+        
+        .garage-container {
+            width: 100%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(10, 15, 30, 0.7);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        #carDisplay {
+            width: 300px;
+            height: 180px;
+            margin: 20px 0;
+            position: relative;
+            perspective: 1000px;
+        }
+        
+        #car3dModel {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+        }
+        
+        .car-rotate-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            z-index: 2;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .car-rotate-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        #rotateLeft {
+            left: 10px;
+        }
+        
+        #rotateRight {
+            right: 10px;
+        }
+        
+        .car-selection {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .car-option {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            width: 150px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .car-option:hover, .car-option.selected {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .car-option img {
+            width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+            pointer-events: none;
+            border-radius: 10px;
+        }
+        
+        .car-option .price {
+            color: gold;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .car-option.owned .price {
+            color: #4CAF50;
+        }
+        
+        .car-stats {
+            margin-top: 20px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            width: 100px;
+            text-align: left;
+            font-size: 16px;
+            color: #3498db;
+        }
+        
+        .stat-value {
+            flex-grow: 1;
+            height: 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .stat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            border-radius: 8px;
+        }
+        
+        .environment-section {
+            width: 100%;
+            margin-top: 25px;
+        }
+        
+        #environmentSelector {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .environment-option {
+            width: 120px;
+            height: 80px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            border: 2px solid transparent;
+        }
+        
+        .environment-option:hover, .environment-option.selected {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px #4CAF50;
+        }
+        
+        .environment-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px;
+            font-size: 14px;
+        }
+        
+        #upgradeShop {
+            margin-top: 25px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .upgrade-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .upgrade-info {
+            flex-grow: 1;
+        }
+        
+        .upgrade-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 18px;
+            color: #3498db;
+        }
+        
+        .upgrade-level {
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        .upgrade-btn {
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #3498db 0%, #1565C0 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            min-width: 120px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .upgrade-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .upgrade-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .level-indicator {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 5px;
+        }
+        
+        .level-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: #444;
+        }
+        
+        .level-dot.active {
+            background-color: #4CAF50;
+        }
+        
+        .level-dot.completed {
+            background-color: gold;
+        }
+        
+        #pauseBtn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: white;
+            z-index: 5;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s;
+        }
+        
+        #pauseBtn:hover {
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.6);
+        }
+        
+        #pauseScreen {
+            display: none;
+        }
+        
+        /* Enhanced car parts */
+        .car-part {
+            position: absolute;
+            background-size: contain;
+            background-repeat: no-repeat;
+            image-rendering: crisp-edges;
+            border-radius: 3px;
+        }
+        
+        .car-body {
+            width: 240px;
+            height: 100px;
+            bottom: 25px;
+            left: 30px;
+            background: linear-gradient(135deg, #2c3e50 0%, #1c2833 100%);
+            border-radius: 15px 15px 5px 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        .car-top {
+            width: 160px;
+            height: 50px;
+            bottom: 100px;
+            left: 60px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .car-wheel {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 30% 30%, #2c3e50, #1c2833);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+            border-radius: 50%;
+        }
+        
+        .car-wheel::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            background: #34495e;
+            border-radius: 50%;
+        }
+        
+        .car-wheel::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            background: #2c3e50;
+            border-radius: 50%;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .car-wheel-front {
+            bottom: 20px;
+            left: 50px;
+        }
+        
+        .car-wheel-back {
+            bottom: 20px;
+            right: 50px;
+        }
+        
+        .car-light {
+            width: 15px;
+            height: 15px;
+            background: radial-gradient(circle, #ffeb3b, #ff9800);
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ffeb3b;
+        }
+        
+        .car-light-front {
+            bottom: 75px;
+            left: 20px;
+        }
+        
+        .car-light-back {
+            bottom: 65px;
+            right: 20px;
+            background: radial-gradient(circle, #f44336, #b71c1c);
+            box-shadow: 0 0 15px #f44336;
+        }
+        
+        /* Performance boost for mobile */
+        canvas {
+            transform: translate3d(0,0,0);
+            -webkit-transform: translate3d(0,0,0);
+        }
+        
+        /* Instructions overlay */
+        #instructions {
+            position: absolute;
+            bottom: 220px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px;
+            z-index: 6;
+            font-size: 18px;
+            transition: opacity 1s;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        /* Repair section */
+        #repairSection {
+            width: 100%;
+            margin-top: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .health-bar {
+            height: 25px;
+            background: #444;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 15px 0;
+            position: relative;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e74c3c, #2ecc71);
+            transition: width 0.5s;
+        }
+        
+        .health-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 16px;
+            line-height: 25px;
+            color: white;
+            text-shadow: 0 0 2px black;
+            font-weight: bold;
+        }
+        
+        /* Level progress bar */
+        .progress-container {
+            width: 100%;
+            background: #444;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+            height: 25px;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #9b59b6);
+            transition: width 0.5s;
+        }
+        
+        .level-progress-text {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 8px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        /* Neon effects for boost */
+        .neon {
+            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #0ff, 0 0 35px #0ff, 0 0 40px #0ff;
+        }
+        
+        /* Difficulty indicator */
+        .difficulty-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin: 15px 0;
+        }
+        
+        .difficulty-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #444;
+        }
+        
+        .difficulty-dot.filled {
+            background: #f39c12;
+        }
+        
+        /* Racing line effect */
+        .racing-line {
+            position: absolute;
+            width: 4px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+            display: none;
+        }
+        
+        /* New additions */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 4;
+        }
+        
+        .drift-effect {
+            position: absolute;
+            pointer-events: none;
+            z-index: 3;
+            opacity: 0.7;
+        }
+        
+        #dayNightToggle {
+            position: absolute;
+            top: 70px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 16px;
+            color: white;
+            cursor: pointer;
+            z-index: 5;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        
+        #weatherSelector {
+            position: absolute;
+            top: 70px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 16px;
+            color: white;
+            cursor: pointer;
+            z-index: 5;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        
+        #driftDisplay {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            color: #9b59b6;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(155, 89, 182, 0.5);
+        }
+        
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            z-index: 15;
+            display: none;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.7; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        .rain-drop {
+            position: absolute;
+            width: 2px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 2;
+        }
+        
+        .fog-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(200, 200, 200, 0.3);
+            pointer-events: none;
+            z-index: 2;
+            display: none;
+        }
+        
+        #minimap {
+            position: absolute;
+            bottom: 220px;
+            right: 20px;
+            width: 150px;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            z-index: 5;
+            display: none;
+        }
+        
+        #minimapCanvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div class="racing-line" id="racingLine"></div>
+        <div id="countdown"></div>
+        <div class="fog-overlay" id="fogOverlay"></div>
+        <div id="minimap">
+            <canvas id="minimapCanvas"></canvas>
+        </div>
+        
+        <div id="uiPanel">
+            <div class="ui-box" id="scoreDisplay">Score: 0</div>
+            <div class="ui-box" id="levelDisplay">Level: 1/100</div>
+            <div class="ui-box" id="coinDisplay">Coins: 0</div>
+            <div class="ui-box" id="speedDisplay">0 km/h</div>
+            <div class="ui-box" id="boostDisplay">Boost: 100%</div>
+            <div class="ui-box" id="driftDisplay">Drift: 0x</div>
+        </div>
+        
+        <div id="controls">
+            <div class="control-group">
+                <div class="control-row">
+                    <div class="control-btn" id="leftBtn">←</div>
+                    <div class="control-btn" id="rightBtn">→</div>
+                </div>
+                <div class="control-btn" id="brakeBtn">⦿</div>
+            </div>
+            
+            <div class="control-group">
+                <div class="control-btn" id="boostBtn">⚡</div>
+                <div class="control-btn" id="driftBtn">↻</div>
+                <div id="boostGauge">
+                    <div id="boostFill"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="pauseBtn">⏸</div>
+        <div id="dayNightToggle">🌙 Night</div>
+        <div id="weatherSelector">☀️ Clear</div>
+        
+        <div id="instructions">
+            Swipe left/right to steer | Press brake (⦿) to slow down | Press boost (⚡) for speed
+        </div>
+        
+        <!-- Screens -->
+        <div id="startScreen" class="screen">
+            <h1>3D RACING ADVENTURE</h1>
+            <p>Experience the ultimate racing challenge with realistic cars and intense gameplay!</p>
+            
+            <div class="difficulty-indicator">
+                <div class="difficulty-dot filled"></div>
+                <div class="difficulty-dot filled"></div>
+                <div class="difficulty-dot"></div>
+                <div class="difficulty-dot"></div>
+                <div class="difficulty-dot"></div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="levelProgressBar" style="width: 0%"></div>
+            </div>
+            <div class="level-progress-text">Level Progress: <span id="levelProgressText">0/100</span></div>
+            
+            <button id="startButton" class="btn">Start Game</button>
+            <button id="garageButton" class="btn btn-secondary">Garage</button>
+            <button id="challengeButton" class="btn btn-premium">Extreme Challenge</button>
+        </div>
+        
+        <div id="garageScreen" class="screen">
+            <div class="garage-container">
+                <h1>PREMIUM GARAGE</h1>
+                
+                <div id="carDisplay">
+                    <div class="car-rotate-btn" id="rotateLeft">◄</div>
+                    <div id="car3dModel">
+                        <div class="car-part car-body"></div>
+                        <div class="car-part car-top"></div>
+                        <div class="car-part car-wheel car-wheel-front"></div>
+                        <div class="car-part car-wheel car-wheel-back"></div>
+                        <div class="car-part car-light car-light-front"></div>
+                        <div class="car-part car-light car-light-back"></div>
+                    </div>
+                    <div class="car-rotate-btn" id="rotateRight">►</div>
+                </div>
+                
+                <div class="car-stats">
+                    <div class="stat-bar">
+                        <div class="stat-label">Speed:</div>
+                        <div class="stat-value"><div class="stat-fill" id="speedStat" style="width: 60%;"></div></div>
+                    </div>
+                    <div class="stat-bar">
+                        <div class="stat-label">Handling:</div>
+                        <div class="stat-value"><div class="stat-fill" id="handlingStat" style="width: 70%;"></div></div>
+                    </div>
+                    <div class="stat-bar">
+                        <div class="stat-label">Durability:</div>
+                        <div class="stat-value"><div class="stat-fill" id="durabilityStat" style="width: 50%;"></div></div>
+                    </div>
+                    <div class="stat-bar">
+                        <div class="stat-label">Acceleration:</div>
+                        <div class="stat-value"><div class="stat-fill" id="accelerationStat" style="width: 65%;"></div></div>
+                    </div>
+                </div>
+                
+                <div id="repairSection">
+                    <h2>Car Repair</h2>
+                    <div class="health-bar">
+                        <div class="health-fill" id="healthFill" style="width: 100%"></div>
+                        <div class="health-text" id="healthText">Health: 100%</div>
+                    </div>
+                    <button id="repairBtn" class="btn btn-secondary">Repair (50 coins)</button>
+                </div>
+                
+                <h2>Your Cars</h2>
+                <div class="car-selection" id="carSelection">
+                    <!-- Cars will be added dynamically -->
+                </div>
+                
+                <div class="environment-section">
+                    <h2>Environments</h2>
+                    <div id="environmentSelector">
+                        <!-- Environments will be added dynamically -->
+                    </div>
+                </div>
+                
+                <div id="upgradeShop">
+                    <h2>Performance Upgrades</h2>
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <div class="upgrade-name">Engine Power</div>
+                            <div class="upgrade-level">Level <span id="speedLevel">1</span></div>
+                        </div>
+                        <button class="upgrade-btn" id="upgradeSpeed">Upgrade (100)</button>
+                    </div>
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <div class="upgrade-name">Steering</div>
+                            <div class="upgrade-level">Level <span id="handlingLevel">1</span></div>
+                        </div>
+                        <button class="upgrade-btn" id="upgradeHandling">Upgrade (100)</button>
+                    </div>
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <div class="upgrade-name">Coin Magnet</div>
+                            <div class="upgrade-level">Level <span id="coinBonusLevel">1</span></div>
+                        </div>
+                        <button class="upgrade-btn" id="upgradeCoinBonus">Upgrade (150)</button>
+                    </div>
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <div class="upgrade-name">Armor</div>
+                            <div class="upgrade-level">Level <span id="armorLevel">1</span></div>
+                        </div>
+                        <button class="upgrade-btn" id="upgradeArmor">Upgrade (120)</button>
+                    </div>
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <div class="upgrade-name">Boost Capacity</div>
+                            <div class="upgrade-level">Level <span id="boostLevel">1</span></div>
+                        </div>
+                        <button class="upgrade-btn" id="upgradeBoost">Upgrade (200)</button>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="backButton" class="btn">Back to Menu</button>
+        </div>
+        
+        <div id="levelCompleteScreen" class="screen">
+            <h1>LEVEL COMPLETE!</h1>
+            <p>Level <span id="completedLevel">1</span> of 100</p>
+            <p>You earned <span id="levelCoinsEarned">0</span> coins</p>
+            <p>Total coins: <span id="totalCoinsDisplay">0</span></p>
+            
+            <div class="difficulty-indicator">
+                <div class="difficulty-dot filled"></div>
+                <div class="difficulty-dot filled"></div>
+                <div class="difficulty-dot"></div>
+                <div class="difficulty-dot"></div>
+                <div class="difficulty-dot"></div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="completedLevelProgressBar" style="width: 0%"></div>
+            </div>
+            <div class="level-progress-text">Level Progress: <span id="completedLevelProgressText">0/100</span></div>
+            
+            <button id="nextLevelButton" class="btn">Next Level</button>
+            <button id="toGarageButton" class="btn btn-secondary">Garage</button>
+        </div>
+        
+        <div id="gameOverScreen" class="screen">
+            <h1>GAME OVER</h1>
+            <p>Level: <span id="finalLevel">1</span> of 100</p>
+            <p>Your score: <span id="finalScore">0</span></p>
+            <p>Coins earned: <span id="coinsEarned">0</span></p>
+            <p>High Score: <span id="highScoreDisplay">0</span></p>
+            
+            <button id="restartButton" class="btn">Try Again</button>
+            <button id="menuButton" class="btn btn-secondary">Main Menu</button>
+        </div>
+        
+        <div id="pauseScreen" class="screen">
+            <h1>GAME PAUSED</h1>
+            
+            <button id="resumeButton" class="btn">Resume</button>
+            <button id="quitButton" class="btn btn-danger">Quit to Menu</button>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced game variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const minimapCanvas = document.getElementById('minimapCanvas');
+        const minimapCtx = minimapCanvas.getContext('2d');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const coinDisplay = document.getElementById('coinDisplay');
+        const speedDisplay = document.getElementById('speedDisplay');
+        const boostDisplay = document.getElementById('boostDisplay');
+        const driftDisplay = document.getElementById('driftDisplay');
+        const finalScoreElement = document.getElementById('finalScore');
+        const coinsEarnedElement = document.getElementById('coinsEarned');
+        const levelCoinsEarnedElement = document.getElementById('levelCoinsEarned');
+        const totalCoinsDisplay = document.getElementById('totalCoinsDisplay');
+        const boostFill = document.getElementById('boostFill');
+        const healthFill = document.getElementById('healthFill');
+        const healthText = document.getElementById('healthText');
+        const levelProgressBar = document.getElementById('levelProgressBar');
+        const levelProgressText = document.getElementById('levelProgressText');
+        const completedLevelProgressBar = document.getElementById('completedLevelProgressBar');
+        const completedLevelProgressText = document.getElementById('completedLevelProgressText');
+        const completedLevelElement = document.getElementById('completedLevel');
+        const finalLevelElement = document.getElementById('finalLevel');
+        const racingLine = document.getElementById('racingLine');
+        const fogOverlay = document.getElementById('fogOverlay');
+        const dayNightToggle = document.getElementById('dayNightToggle');
+        const weatherSelector = document.getElementById('weatherSelector');
+        const countdownElement = document.getElementById('countdown');
+        
+        // 3D Car elements
+        const car3dModel = document.getElementById('car3dModel');
+        const rotateLeftBtn = document.getElementById('rotateLeft');
+        const rotateRightBtn = document.getElementById('rotateRight');
+        const speedStat = document.getElementById('speedStat');
+        const handlingStat = document.getElementById('handlingStat');
+        const durabilityStat = document.getElementById('durabilityStat');
+        const accelerationStat = document.getElementById('accelerationStat');
+        
+        // Screens
+        const startScreen = document.getElementById('startScreen');
+        const garageScreen = document.getElementById('garageScreen');
+        const levelCompleteScreen = document.getElementById('levelCompleteScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const pauseScreen = document.getElementById('pauseScreen');
+        const instructions = document.getElementById('instructions');
+        const minimap = document.getElementById('minimap');
+        
+        // Buttons
+        const startButton = document.getElementById('startButton');
+        const garageButton = document.getElementById('garageButton');
+        const challengeButton = document.getElementById('challengeButton');
+        const backButton = document.getElementById('backButton');
+        const nextLevelButton = document.getElementById('nextLevelButton');
+        const toGarageButton = document.getElementById('toGarageButton');
+        const restartButton = document.getElementById('restartButton');
+        const menuButton = document.getElementById('menuButton');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resumeButton = document.getElementById('resumeButton');
+        const quitButton = document.getElementById('quitButton');
+        const repairBtn = document.getElementById('repairBtn');
+        
+        // Controls
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const brakeBtn = document.getElementById('brakeBtn');
+        const boostBtn = document.getElementById('boostBtn');
+        const driftBtn = document.getElementById('driftBtn');
+        
+        // Upgrade buttons
+        const upgradeSpeedBtn = document.getElementById('upgradeSpeed');
+        const upgradeHandlingBtn = document.getElementById('upgradeHandling');
+        const upgradeCoinBonusBtn = document.getElementById('upgradeCoinBonus');
+        const upgradeArmorBtn = document.getElementById('upgradeArmor');
+        const upgradeBoostBtn = document.getElementById('upgradeBoost');
+        
+        // Car selection
+        const carSelection = document.getElementById('carSelection');
+        const environmentSelector = document.getElementById('environmentSelector');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            minimapCanvas.width = minimap.clientWidth;
+            minimapCanvas.height = minimap.clientHeight;
+            racingLine.style.height = canvas.height + 'px';
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Game state
+        let gameRunning = false;
+        let gamePaused = false;
+        let score = 0;
+        let coins = 0;
+        let coinsEarnedThisRound = 0;
+        let speed = 0;
+        let maxSpeed = 150;
+        let acceleration = 0.1;
+        let brakePower = 0.3;
+        let currentLevel = 1;
+        const totalLevels = 100;
+        let roadWidth = canvas.width * 0.6;
+        let roadX = (canvas.width - roadWidth) / 2;
+        let carRotation = 0;
+        let boostActive = false;
+        let boostAmount = 100;
+        let boostRechargeRate = 0.5;
+        let boostConsumptionRate = 2;
+        let boostMultiplier = 1.5;
+        let swipeStartX = 0;
+        let swipeStartY = 0;
+        let swipeThreshold = 50;
+        let difficultyMode = 'normal'; // 'normal' or 'extreme'
+        let driftActive = false;
+        let driftPoints = 0;
+        let driftMultiplier = 1;
+        let driftAngle = 0;
+        let driftTimer = 0;
+        let isDayTime = false;
+        let weather = 'clear'; // 'clear', 'rain', 'fog'
+        let rainDrops = [];
+        let highScore = 0;
+        
+        // Player data
+        const player = {
+            coins: 0,
+            ownedCars: [0],
+            currentCar: 0,
+            currentEnvironment: 0,
+            upgrades: {
+                speed: 1,
+                handling: 1,
+                coinBonus: 1,
+                armor: 1,
+                boost: 1
+            },
+            health: 100,
+            levelProgress: 0
+        };
+        
+        // Enhanced car list with realistic specs
+        const cars = [
+            { 
+                id: 0, 
+                name: "Sports Coupe", 
+                color: "#e74c3c", 
+                topColor: "#c0392b",
+                price: 0, 
+                width: 40, 
+                height: 70, 
+                speed: 6,
+                handling: 8,
+                durability: 5,
+                acceleration: 7,
+                image: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgODAiPjxwYXRoIGQ9Ik0xNSA1MEgxMDVWNDBIMTFWNTBIMTVaIiBmaWxsPSIjZTc0YzNjIi8+PHBhdGggZD0iTTIwIDQ1SDEwMFYyNUgyMFY0NVoiIGZpbGw9IiNjYzM2MjYiLz48Y2lyY2xlIGN4PSIzNSIgY3k9IjY1IiByPSIxNSIgZmlsbD0iIzIyMiIvPjxjaXJjbGUgY3g9Ijg1IiBjeT0iNjUiIHI9IjE1IiBmaWxsPSIjMjIyIi8+PGNpcmNsZSBjeD0iMzUiIGN5PSI2NSIgcj0iMTAiIGZpbGw9IiM1NTUiLz48Y2lyY2xlIGN4PSI4NSIgY3k9IjY1IiByPSIxMCIgZmlsbD0iIzU1NSIvPjxjaXJjbGUgY3g9IjM1IiBjeT0iNjUiIHI9IjUiIGZpbGw9IiM4ODgiLz48Y2lyY2xlIGN4PSI4NSIgY3k9IjY1IiByPSI1IiBmaWxsPSIjODg4Ii8+PGNpcmNsZSBjeD0iMTAiIGN5PSI1MCIgcj0iNSIgZmlsbD0iI2ZmZjgwMCIvPjxjaXJjbGUgY3g9IjExMCIgY3k9IjUwIiByPSI1IiBmaWxsPSIjZmYwMDAwIi8+PC9zdmc+"
+            },
+            { 
+                id: 1, 
+                name: "Hypercar", 
+                color: "#3498db", 
+                topColor: "#2980b9",
+                price: 5000, 
+                width: 42, 
+                height: 65, 
+                speed: 9,
+                handling: 7,
+                durability: 4,
+                acceleration: 9,
+                image: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgODAiPjxwYXRoIGQ9Ik0xMCA0MEgxMTBWMTBIMTBWNDBaIiBmaWxsPSIjMzQ5OGRiIi8+PHBhdGggZD0iTTIwIDIwSDEwMFYxNUgyMFYyMFoiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMjAgNDBIMjBWMTBIMjBaIiBmaWxsPSIjMzQ5OGRiIi8+PGNpcmNsZSBjeD0iMzAiIGN5PSI2MCIgcj0iMTIiIGZpbGw9IiMyMjIiLz48Y2lyY2xlIGN4PSI5MCIgY3k9IjYwIiByPSIxMiIgZmlsbD0iIzIyMiIvPjxjaXJjbGUgY3g9IjMwIiBjeT0iNjAiIHI9IjgiIGZpbGw9IiM1NTUiLz48Y2lyY2xlIGN4PSI5MCIgY3k9IjYwIiByPSI4IiBmaWxsPSIjNTU1Ii8+PGNpcmNsZSBjeD0iMzAiIGN5PSI2MCIgcj0iNCIgZmlsbD0iIzg4OCIvPjxjaXJjbGUgY3g9IjkwIiBjeT0iNjAiIHI9IjQiIGZpbGw9IiM4ODgiLz48L3N2Zz4="
+            },
+            { 
+                id: 2, 
+                name: "Off-Roader", 
+                color: "#2ecc71", 
+                topColor: "#27ae60",
+                price: 3000, 
+                width: 50, 
+                height: 90, 
+                speed: 5,
+                handling: 6,
+                durability: 8,
+                acceleration: 6,
+                image: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgODAiPjxyZWN0IHg9IjEwIiB5PSIzMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSI0MCIgcng9IjUiIHJ5PSI1IiBmaWxsPSIjMmVjYzcxIi8+PHJlY3QgeD0iMjAiIHk9IjEwIiB3aWR0aD0iODAiIGhlaWdodD0iMzAiIHJ4PSI0IiByeT0iNCIgZmlsbD0iIzI3YWU2MCIvPjxjaXJjbGUgY3g9IjMwIiBjeT0iNjUiIHI9IjIwIiBmaWxsPSIjMjIyIi8+PGNpcmNsZSBjeD0iOTAiIGN5PSI2NSIgcj0iMjAiIGZpbGw9IiMyMjIiLz48Y2lyY2xlIGN4PSIzMCIgY3k9IjY1IiByPSIxNCIgZmlsbD0iIzU1NSIvPjxjaXJjbGUgY3g9IjkwIiBjeT0iNjUiIHI9IjE0IiBmaWxsPSIjNTU1Ii8+PGNpcmNsZSBjeD0iMzAiIGN5PSI2NSIgcj0iOCIgZmlsbD0iIzg4OCIvPjxjaXJjbGUgY3g9IjkwIiBjeT0iNjUiIHI9IjgiIGZpbGw9IiM4ODgiLz48L3N2Zz4="
+            },
+            { 
+                id: 3, 
+                name: "Luxury Sedan", 
+                color: "#9b59b6", 
+                topColor: "#8e44ad",
+                price: 4000, 
+                width: 48, 
+                height: 85, 
+                speed: 7,
+                handling: 9,
+                durability: 6,
+                acceleration: 6,
+                image: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgODAiPjxyZWN0IHg9IjEwIiB5PSIzMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSI0MCIgcng9IjUiIHJ5PSI1IiBmaWxsPSIjOWI1OWI2Ii8+PHJlY3QgeD0iMjAiIHk9IjE1IiB3aWR0aD0iODAiIGhlaWdodD0iMzAiIHJ4PSI0IiByeT0iNCIgZmlsbD0iIzhlNDRhZCIvPjxjaXJjbGUgY3g9IjMwIiBjeT0iNjUiIHI9IjE1IiBmaWxsPSIjMjIyIi8+PGNpcmNsZSBjeD0iOTAiIGN5PSI2NSIgcj0iMTUiIGZpbGw9IiMyMjIiLz48Y2lyY2xlIGN4PSIzMCIgY3k9IjY1IiByPSIxMCIgZmlsbD0iIzU1NSIvPjxjaXJjbGUgY3g9IjkwIiBjeT0iNjUiIHI9IjEwIiBmaWxsPSIjNTU1Ii8+PGNpcmNsZSBjeD0iMzAiIGN5PSI2NSIgcj0iNSIgZmlsbD0iIzg4OCIvPjxjaXJjbGUgY3g9IjkwIiBjeT0iNjUiIHI9IjUiIGZpbGw9IiM4ODgiLz48Y2lyY2xlIGN4PSI1IiBjeT0iNTAiIHI9IjUiIGZpbGw9IiNmZmY4MDAiLz48Y2lyY2xlIGN4PSIxMTUiIGN5PSI1MCIgcj0iNSIgZmlsbD0iI2ZmMDAwMCIvPjwvc3ZnPg=="
+            },
+            { 
+                id: 4, 
+                name: "Race Prototype", 
+                color: "#f1c40f", 
+                topColor: "#f39c12",
+                price: 8000, 
+                width: 40, 
+                height: 70, 
+                speed: 10,
+                handling: 8,
+                durability: 4,
+                acceleration: 10,
+                image: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgODAiPjxwYXRoIGQ9Ik0yMCA0MEgxMDBWMjBIMjBWNDBaIiBmaWxsPSIjZjFjNDBmIi8+PHBhdGggZD0iTTMwIDMwSDkwVjI1SDMwVjMwWiIgZmlsbD0iI2RiYWMwZiIvPjxwYXRoIGQ9Ik0yMCA0MEgyMFYyMEgyMFoiIGZpbGw9IiNmMWM0MGYiLz48Y2lyY2xlIGN4PSIzNSIgY3k9IjYwIiByPSIxMiIgZmlsbD0iIzIyMiIvPjxjaXJjbGUgY3g9Ijg1IiBjeT0iNjAiIHI9IjEyIiBmaWxsPSIjMjIyIi8+PGNpcmNsZSBjeD0iMzUiIGN5PSI2MCIgcj0iOCIgZmlsbD0iIzU1NSIvPjxjaXJjbGUgY3g9Ijg1IiBjeT0iNjAiIHI9IjgiIGZpbGw9IiM1NTUiLz48Y2lyY2xlIGN4PSIzNSIgY3k9IjYwIiByPSI0IiBmaWxsPSIjODg4Ii8+PGNpcmNsZSBjeD0iODUiIGN5PSI2MCIgcj0iNCIgZmlsbD0iIzg4OCIvPjwvc3ZnPg=="
+            }
+        ];
+        
+        // Enhanced environments with more details
+        const environments = [
+            { 
+                id: 0, 
+                name: "City Night", 
+                roadColor: "#333", 
+                bgColor: "#1a1a1a", 
+                decorColor: "#555", 
+                decorItems: ["building", "lamp", "sign"], 
+                price: 0,
+                roadMarking: "#fff"
+            },
+            { 
+                id: 1, 
+                name: "Desert Run", 
+                roadColor: "#d35400", 
+                bgColor: "#f39c12", 
+                decorColor: "#e67e22", 
+                decorItems: ["cactus", "rock", "dune"], 
+                price: 500,
+                roadMarking: "#f1c40f"
+            },
+            { 
+                id: 2, 
+                name: "Mountain Pass", 
+                roadColor: "#7f8c8d", 
+                bgColor: "#2c3e50", 
+                decorColor: "#34495e", 
+                decorItems: ["peak", "tree", "rock"], 
+                price: 1000,
+                roadMarking: "#ecf0f1"
+            },
+            { 
+                id: 3, 
+                name: "Coastal Drive", 
+                roadColor: "#f1c40f", 
+                bgColor: "#3498db", 
+                decorColor: "#f39c12", 
+                decorItems: ["palm", "shell", "crab"], 
+                price: 1500,
+                roadMarking: "#e74c3c"
+            },
+            { 
+                id: 4, 
+                name: "Neon Highway", 
+                roadColor: "#9b59b6", 
+                bgColor: "#2c3e50", 
+                decorColor: "#3498db", 
+                decorItems: ["building", "sign", "light"], 
+                price: 2000,
+                roadMarking: "#3498db"
+            }
+        ];
+        
+        // Player car
+        let playerCar = {
+            ...cars[0],
+            x: canvas.width / 2 - cars[0].width / 2,
+            y: canvas.height - 100,
+            health: 100
+        };
+        
+        // Game objects
+        let obstacles = [];
+        let coinsOnRoad = [];
+        let decorItems = [];
+        let roadMarkers = [];
+        
+        // Game settings
+        const markerHeight = 40;
+        const markerGap = 80;
+        let obstacleFrequency = 120;
+        let obstacleCounter = 0;
+        let coinFrequency = 60;
+        let coinCounter = 0;
+        let decorFrequency = 30;
+        let decorCounter = 0;
+        let environment = environments[0];
+        
+        // Initialize game
+        function initGame() {
+            // Load player data from localStorage
+            const savedPlayer = localStorage.getItem('racingGamePlayer');
+            if (savedPlayer) {
+                Object.assign(player, JSON.parse(savedPlayer));
+            }
+            
+            // Load high score
+            const savedHighScore = localStorage.getItem('racingGameHighScore');
+            if (savedHighScore) {
+                highScore = parseInt(savedHighScore);
+            }
+            
+            coins = player.coins;
+            updateCoinDisplay();
+            updateHealthDisplay();
+            updateLevelProgress();
+            updateHighScoreDisplay();
+            
+            // Initialize car selection
+            renderCarSelection();
+            renderEnvironmentSelection();
+            updateUpgradeButtons();
+            updateCar3dModel();
+            
+            // Car rotation controls
+            rotateLeftBtn.addEventListener('mousedown', startRotateLeft);
+            rotateLeftBtn.addEventListener('touchstart', startRotateLeft);
+            rotateRightBtn.addEventListener('mousedown', startRotateRight);
+            rotateRightBtn.addEventListener('touchstart', startRotateRight);
+            
+            rotateLeftBtn.addEventListener('mouseup', stopRotation);
+            rotateLeftBtn.addEventListener('touchend', stopRotation);
+            rotateRightBtn.addEventListener('mouseup', stopRotation);
+            rotateRightBtn.addEventListener('touchend', stopRotation);
+            
+            rotateLeftBtn.addEventListener('mouseleave', stopRotation);
+            rotateRightBtn.addEventListener('mouseleave', stopRotation);
+            
+            // Add swipe controls
+            setupSwipeControls();
+            
+            // Weather and day/night toggle
+            dayNightToggle.addEventListener('click', toggleDayNight);
+            weatherSelector.addEventListener('click', toggleWeather);
+        }
+        
+        // Update high score display
+        function updateHighScoreDisplay() {
+            document.getElementById('highScoreDisplay').textContent = highScore;
+        }
+        
+        // Toggle day/night mode
+        function toggleDayNight() {
+            isDayTime = !isDayTime;
+            dayNightToggle.textContent = isDayTime ? "☀️ Day" : "🌙 Night";
+        }
+        
+        // Toggle weather
+        function toggleWeather() {
+            const weatherOptions = ['clear', 'rain', 'fog'];
+            const currentIndex = weatherOptions.indexOf(weather);
+            weather = weatherOptions[(currentIndex + 1) % weatherOptions.length];
+            weatherSelector.textContent = 
+                weather === 'clear' ? "☀️ Clear" : 
+                weather === 'rain' ? "🌧️ Rain" : "🌫️ Fog";
+            
+            fogOverlay.style.display = weather === 'fog' ? 'block' : 'none';
+        }
+        
+        // Setup swipe controls
+        function setupSwipeControls() {
+            canvas.addEventListener('touchstart', function(e) {
+                swipeStartX = e.touches[0].clientX;
+                swipeStartY = e.touches[0].clientY;
+            }, false);
+            
+            canvas.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            }, false);
+            
+            canvas.addEventListener('touchend', function(e) {
+                const swipeEndX = e.changedTouches[0].clientX;
+                const swipeEndY = e.changedTouches[0].clientY;
+                
+                const dx = swipeEndX - swipeStartX;
+                const dy = swipeEndY - swipeStartY;
+                
+                // Check if it's a horizontal swipe
+                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > swipeThreshold) {
+                    if (dx > 0) {
+                        // Swipe right
+                        keys.right = true;
+                        setTimeout(() => { keys.right = false; }, 200);
+                    } else {
+                        // Swipe left
+                        keys.left = true;
+                        setTimeout(() => { keys.left = false; }, 200);
+                    }
+                }
+            }, false);
+        }
+        
+        // Update level progress display
+        function updateLevelProgress() {
+            const progress = (player.levelProgress / totalLevels) * 100;
+            levelProgressBar.style.width = `${progress}%`;
+            levelProgressText.textContent = `${player.levelProgress}/${totalLevels}`;
+            
+            completedLevelProgressBar.style.width = `${progress}%`;
+            completedLevelProgressText.textContent = `${player.levelProgress}/${totalLevels}`;
+        }
+        
+        // Update health display
+        function updateHealthDisplay() {
+            const healthPercent = player.health;
+            healthFill.style.width = `${healthPercent}%`;
+            healthText.textContent = `Health: ${Math.round(healthPercent)}%`;
+            
+            // Update repair button
+            const repairCost = Math.max(10, Math.round((100 - healthPercent) * 0.5));
+            repairBtn.textContent = `Repair (${repairCost} coins)`;
+        }
+        
+        // Car rotation functions
+        let rotationInterval = null;
+        
+        function startRotateLeft() {
+            stopRotation();
+            rotationInterval = setInterval(() => {
+                carRotation -= 2;
+                updateCar3dModel();
+            }, 16);
+        }
+        
+        function startRotateRight() {
+            stopRotation();
+            rotationInterval = setInterval(() => {
+                carRotation += 2;
+                updateCar3dModel();
+            }, 16);
+        }
+        
+        function stopRotation() {
+            if (rotationInterval) {
+                clearInterval(rotationInterval);
+                rotationInterval = null;
+            }
+        }
+        
+        // Update 3D car model
+        function updateCar3dModel() {
+            const car = cars[player.currentCar];
+            
+            // Update car parts colors
+            document.querySelector('.car-body').style.background = car.color;
+            document.querySelector('.car-top').style.background = car.topColor;
+            
+            // Apply 3D rotation
+            car3dModel.style.transform = `rotateY(${carRotation}deg)`;
+            
+            // Update stats display
+            speedStat.style.width = `${(car.speed / 10) * 100}%`;
+            handlingStat.style.width = `${(car.handling / 10) * 100}%`;
+            durabilityStat.style.width = `${(car.durability / 10) * 100}%`;
+            accelerationStat.style.width = `${(car.acceleration / 10) * 100}%`;
+        }
+        
+        // Render car selection in garage
+        function renderCarSelection() {
+            carSelection.innerHTML = '';
+            cars.forEach(car => {
+                const carElement = document.createElement('div');
+                carElement.className = `car-option ${player.ownedCars.includes(car.id) ? 'owned' : ''} ${player.currentCar === car.id ? 'selected' : ''}`;
+                carElement.innerHTML = `
+                    <img src="${car.image}" alt="${car.name}">
+                    <div>${car.name}</div>
+                    ${player.ownedCars.includes(car.id) ? 
+                        '<div class="price">OWNED</div>' : 
+                        `<div class="price">${car.price} coins</div>`}
+                `;
+                
+                carElement.addEventListener('click', () => {
+                    if (player.ownedCars.includes(car.id)) {
+                        // Select car
+                        document.querySelector('.car-option.selected').classList.remove('selected');
+                        carElement.classList.add('selected');
+                        player.currentCar = car.id;
+                        updateCar3dModel();
+                        savePlayerData();
+                    } else if (player.coins >= car.price) {
+                        // Buy car
+                        player.coins -= car.price;
+                        player.ownedCars.push(car.id);
+                        player.currentCar = car.id;
+                        coins = player.coins;
+                        updateCoinDisplay();
+                        savePlayerData();
+                        renderCarSelection();
+                        updateUpgradeButtons();
+                        updateCar3dModel();
+                    }
+                });
+                
+                carSelection.appendChild(carElement);
+            });
+        }
+        
+        // Render environment selection
+        function renderEnvironmentSelection() {
+            environmentSelector.innerHTML = '';
+            environments.forEach(env => {
+                const envElement = document.createElement('div');
+                envElement.className = `environment-option ${player.currentEnvironment === env.id ? 'selected' : ''}`;
+                envElement.style.background = `linear-gradient(rgba(0,0,0,0.7), ${env.bgColor}`;
+                envElement.innerHTML = `<div class="environment-name">${env.name}</div>`;
+                
+                envElement.addEventListener('click', () => {
+                    if (player.currentEnvironment !== env.id) {
+                        document.querySelector('.environment-option.selected').classList.remove('selected');
+                        envElement.classList.add('selected');
+                        player.currentEnvironment = env.id;
+                        environment = env;
+                        savePlayerData();
+                    }
+                });
+                
+                environmentSelector.appendChild(envElement);
+            });
+        }
+        
+        // Update upgrade buttons
+        function updateUpgradeButtons() {
+            document.getElementById('speedLevel').textContent = player.upgrades.speed;
+            document.getElementById('handlingLevel').textContent = player.upgrades.handling;
+            document.getElementById('coinBonusLevel').textContent = player.upgrades.coinBonus;
+            document.getElementById('armorLevel').textContent = player.upgrades.armor;
+            document.getElementById('boostLevel').textContent = player.upgrades.boost;
+            
+            const speedCost = player.upgrades.speed * 100;
+            const handlingCost = player.upgrades.handling * 100;
+            const coinBonusCost = player.upgrades.coinBonus * 150;
+            const armorCost = player.upgrades.armor * 120;
+            const boostCost = player.upgrades.boost * 200;
+            
+            upgradeSpeedBtn.textContent = `Upgrade (${speedCost})`;
+            upgradeHandlingBtn.textContent = `Upgrade (${handlingCost})`;
+            upgradeCoinBonusBtn.textContent = `Upgrade (${coinBonusCost})`;
+            upgradeArmorBtn.textContent = `Upgrade (${armorCost})`;
+            upgradeBoostBtn.textContent = `Upgrade (${boostCost})`;
+            
+            upgradeSpeedBtn.disabled = player.coins < speedCost;
+            upgradeHandlingBtn.disabled = player.coins < handlingCost;
+            upgradeCoinBonusBtn.disabled = player.coins < coinBonusCost;
+            upgradeArmorBtn.disabled = player.coins < armorCost;
+            upgradeBoostBtn.disabled = player.coins < boostCost;
+        }
+        
+        // Save player data
+        function savePlayerData() {
+            player.coins = coins;
+            localStorage.setItem('racingGamePlayer', JSON.stringify(player));
+        }
+        
+        // Initialize road markers
+        function initRoadMarkers() {
+            roadMarkers = [];
+            for (let y = -markerHeight; y < canvas.height; y += markerHeight + markerGap) {
+                roadMarkers.push({
+                    x: canvas.width / 2 - 5,
+                    y: y,
+                    width: 10,
+                    height: markerHeight
+                });
+            }
+        }
+        
+        // Initialize decor items
+        function initDecorItems() {
+            decorItems = [];
+            const env = environment;
+            
+            // Add some random decor items based on environment
+            for (let i = 0; i < 20; i++) {
+                const typeIndex = Math.floor(Math.random() * env.decorItems.length);
+                const type = env.decorItems[typeIndex];
+                
+                decorItems.push({
+                    x: Math.random() < 0.5 ? 
+                        Math.random() * (roadX - 50) : 
+                        roadX + roadWidth + Math.random() * (canvas.width - roadX - roadWidth - 50),
+                    y: Math.random() * canvas.height * 3,
+                    width: 30 + Math.random() * 40,
+                    height: 30 + Math.random() * 40,
+                    color: env.decorColor,
+                    type: type
+                });
+            }
+        }
+        
+        // Initialize rain drops
+        function initRainDrops() {
+            rainDrops = [];
+            for (let i = 0; i < 100; i++) {
+                rainDrops.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    speed: 5 + Math.random() * 10,
+                    length: 10 + Math.random() * 20
+                });
+            }
+        }
+        
+        // Game controls
+        let keys = {
+            left: false,
+            right: false,
+            brake: false,
+            boost: false,
+            drift: false
+        };
+        
+        // Touch controls
+        leftBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys.left = true;
+        });
+        
+        leftBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys.left = false;
+        });
+        
+        rightBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys.right = true;
+        });
+        
+        rightBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys.right = false;
+        });
+        
+        brakeBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys.brake = true;
+        });
+        
+        brakeBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys.brake = false;
+        });
+        
+        boostBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys.boost = true;
+        });
+        
+        boostBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys.boost = false;
+        });
+        
+        driftBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys.drift = true;
+        });
+        
+        driftBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys.drift = false;
+        });
+        
+        // Keyboard controls
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') keys.left = true;
+            if (e.key === 'ArrowRight') keys.right = true;
+            if (e.key === 'ArrowDown') keys.brake = true;
+            if (e.key === 'ArrowUp') keys.boost = true;
+            if (e.key === 'Shift') keys.drift = true;
+            if (e.key === 'Escape') togglePause();
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft') keys.left = false;
+            if (e.key === 'ArrowRight') keys.right = false;
+            if (e.key === 'ArrowDown') keys.brake = false;
+            if (e.key === 'ArrowUp') keys.boost = false;
+            if (e.key === 'Shift') keys.drift = false;
+        });
+        
+        // Button events
+        startButton.addEventListener('click', () => {
+            difficultyMode = 'normal';
+            startGame();
+        });
+        challengeButton.addEventListener('click', () => {
+            difficultyMode = 'extreme';
+            startGame();
+        });
+        garageButton.addEventListener('click', showGarage);
+        backButton.addEventListener('click', showMainMenu);
+        nextLevelButton.addEventListener('click', nextLevel);
+        toGarageButton.addEventListener('click', showGarage);
+        restartButton.addEventListener('click', startGame);
+        menuButton.addEventListener('click', showMainMenu);
+        pauseBtn.addEventListener('click', togglePause);
+        resumeButton.addEventListener('click', togglePause);
+        quitButton.addEventListener('click', showMainMenu);
+        
+        // Repair button
+        repairBtn.addEventListener('click', () => {
+            const repairCost = Math.max(10, Math.round((100 - player.health) * 0.5));
+            if (coins >= repairCost) {
+                coins -= repairCost;
+                player.health = 100;
+                playerCar.health = 100;
+                updateCoinDisplay();
+                updateHealthDisplay();
+                savePlayerData();
+            }
+        });
+        
+        // Upgrade events
+        upgradeSpeedBtn.addEventListener('click', () => {
+            const cost = player.upgrades.speed * 100;
+            if (coins >= cost) {
+                coins -= cost;
+                player.upgrades.speed++;
+                savePlayerData();
+                updateCoinDisplay();
+                updateUpgradeButtons();
+            }
+        });
+        
+        upgradeHandlingBtn.addEventListener('click', () => {
+            const cost = player.upgrades.handling * 100;
+            if (coins >= cost) {
+                coins -= cost;
+                player.upgrades.handling++;
+                savePlayerData();
+                updateCoinDisplay();
+                updateUpgradeButtons();
+            }
+        });
+        
+        upgradeCoinBonusBtn.addEventListener('click', () => {
+            const cost = player.upgrades.coinBonus * 150;
+            if (coins >= cost) {
+                coins -= cost;
+                player.upgrades.coinBonus++;
+                savePlayerData();
+                updateCoinDisplay();
+                updateUpgradeButtons();
+            }
+        });
+        
+        upgradeArmorBtn.addEventListener('click', () => {
+            const cost = player.upgrades.armor * 120;
+            if (coins >= cost) {
+                coins -= cost;
+                player.upgrades.armor++;
+                savePlayerData();
+                updateCoinDisplay();
+                updateUpgradeButtons();
+            }
+        });
+        
+        upgradeBoostBtn.addEventListener('click', () => {
+            const cost = player.upgrades.boost * 200;
+            if (coins >= cost) {
+                coins -= cost;
+                player.upgrades.boost++;
+                boostRechargeRate = 0.5 + (player.upgrades.boost * 0.1);
+                boostMultiplier = 1.5 + (player.upgrades.boost * 0.1);
+                savePlayerData();
+                updateCoinDisplay();
+                updateUpgradeButtons();
+            }
+        });
+        
+        // Show garage
+        function showGarage() {
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            levelCompleteScreen.style.display = 'none';
+            garageScreen.style.display = 'flex';
+            pauseScreen.style.display = 'none';
+            
+            updateCoinDisplay();
+            updateHealthDisplay();
+            renderCarSelection();
+            renderEnvironmentSelection();
+            updateUpgradeButtons();
+            updateCar3dModel();
+        }
+        
+        // Show main menu
+        function showMainMenu() {
+            gameRunning = false;
+            startScreen.style.display = 'flex';
+            gameOverScreen.style.display = 'none';
+            levelCompleteScreen.style.display = 'none';
+            garageScreen.style.display = 'none';
+            pauseScreen.style.display = 'none';
+        }
+        
+        // Toggle pause
+        function togglePause() {
+            if (!gameRunning) return;
+            
+            gamePaused = !gamePaused;
+            pauseScreen.style.display = gamePaused ? 'flex' : 'none';
+            
+            if (!gamePaused) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        // Create visual effects
+        function createParticle(x, y, color) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.backgroundColor = color;
+            particle.style.width = `${Math.random() * 8 + 4}px`;
+            particle.style.height = particle.style.width;
+            particle.style.left = `${x}px`;
+            particle.style.top = `${y}px`;
+            particle.style.opacity = '1';
+            
+            document.getElementById('gameContainer').appendChild(particle);
+            
+            // Animate particle
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * 50 + 30;
+            const duration = Math.random() * 500 + 500;
+            
+            const animation = particle.animate([
+                { transform: `translate(0, 0)`, opacity: 1 },
+                { transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`, opacity: 0 }
+            ], {
+                duration: duration,
+                easing: 'ease-out'
+            });
+            
+            animation.onfinish = () => {
+                particle.remove();
+            };
+        }
+        
+        // Create drift effect
+        function createDriftEffect(x, y, width, height, color) {
+            const effect = document.createElement('div');
+            effect.className = 'drift-effect';
+            effect.style.backgroundColor = color;
+            effect.style.width = `${width}px`;
+            effect.style.height = `${height}px`;
+            effect.style.left = `${x}px`;
+            effect.style.top = `${y}px`;
+            effect.style.borderRadius = '50%';
+            effect.style.opacity = '0.7';
+            
+            document.getElementById('gameContainer').appendChild(effect);
+            
+            // Animate effect
+            const animation = effect.animate([
+                { transform: 'scale(1)', opacity: 0.7 },
+                { transform: 'scale(1.5)', opacity: 0 }
+            ], {
+                duration: 500,
+                easing: 'ease-out'
+            });
+            
+            animation.onfinish = () => {
+                effect.remove();
+            };
+        }
+        
+        // Start game
+        function startGame() {
+            gameRunning = true;
+            gamePaused = false;
+            score = 0;
+            coinsEarnedThisRound = 0;
+            speed = 0;
+            currentLevel = Math.min(100, Math.max(1, player.levelProgress));
+            boostAmount = 100;
+            driftPoints = 0;
+            driftMultiplier = 1;
+            
+            // Set player car
+            const selectedCar = cars.find(c => c.id === player.currentCar);
+            playerCar = {
+                ...selectedCar,
+                x: canvas.width / 2 - selectedCar.width / 2,
+                y: canvas.height - 100,
+                health: player.health
+            };
+            
+            // Adjust car stats based on upgrades
+            playerCar.speed += player.upgrades.speed * 0.5;
+            playerCar.handling += player.upgrades.handling * 0.3;
+            boostMultiplier = 1.5 + (player.upgrades.boost * 0.1);
+            boostRechargeRate = 0.5 + (player.upgrades.boost * 0.1);
+            
+            // Set road based on environment and difficulty
+            let roadWidthFactor;
+            if (difficultyMode === 'extreme') {
+                // Narrower road for extreme mode
+                roadWidthFactor = 0.4 + (0.15 * (currentLevel / 100));
+            } else {
+                roadWidthFactor = 0.5 + (0.25 * (currentLevel / 100));
+            }
+            roadWidth = Math.min(canvas.width * 0.7, canvas.width * roadWidthFactor);
+            roadX = (canvas.width - roadWidth) / 2;
+            
+            obstacles = [];
+            coinsOnRoad = [];
+            obstacleCounter = 0;
+            coinCounter = 0;
+            decorCounter = 0;
+            
+            initRoadMarkers();
+            initDecorItems();
+            initRainDrops();
+            
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            levelCompleteScreen.style.display = 'none';
+            garageScreen.style.display = 'none';
+            pauseScreen.style.display = 'none';
+            
+            levelDisplay.textContent = `Level: ${currentLevel}/100`;
+            racingLine.style.display = 'block';
+            minimap.style.display = 'block';
+            
+            // Hide instructions after 5 seconds
+            setTimeout(() => {
+                instructions.style.opacity = '0';
+                setTimeout(() => {
+                    instructions.style.display = 'none';
+                }, 1000);
+            }, 5000);
+            
+            // Start countdown
+            startCountdown();
+        }
+        
+        // Start countdown
+        function startCountdown() {
+            let count = 3;
+            countdownElement.textContent = count;
+            countdownElement.style.display = 'block';
+            
+            const countdownInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownElement.textContent = count;
+                } else if (count === 0) {
+                    countdownElement.textContent = "GO!";
+                } else {
+                    countdownElement.style.display = 'none';
+                    clearInterval(countdownInterval);
+                    // Start game loop
+                    requestAnimationFrame(gameLoop);
+                }
+            }, 1000);
+        }
+        
+        // Next level
+        function nextLevel() {
+            currentLevel++;
+            if (currentLevel > totalLevels) {
+                // Game completed
+                showMainMenu();
+                return;
+            }
+            
+            player.levelProgress = Math.max(player.levelProgress, currentLevel);
+            savePlayerData();
+            updateLevelProgress();
+            
+            gameRunning = true;
+            gamePaused = false;
+            score = 0;
+            coinsEarnedThisRound = 0;
+            speed = 0;
+            boostAmount = 100;
+            driftPoints = 0;
+            driftMultiplier = 1;
+            
+            // Increase difficulty
+            maxSpeed = 150 + (currentLevel * 1.5);
+            
+            // Set player car
+            const selectedCar = cars.find(c => c.id === player.currentCar);
+            playerCar = {
+                ...selectedCar,
+                x: canvas.width / 2 - selectedCar.width / 2,
+                y: canvas.height - 100,
+                health: player.health
+            };
+            
+            // Adjust car stats based on upgrades
+            playerCar.speed += player.upgrades.speed * 0.5;
+            playerCar.handling += player.upgrades.handling * 0.3;
+            boostMultiplier = 1.5 + (player.upgrades.boost * 0.1);
+            boostRechargeRate = 0.5 + (player.upgrades.boost * 0.1);
+            
+            // Set road based on difficulty
+            let roadWidthFactor;
+            if (difficultyMode === 'extreme') {
+                roadWidthFactor = 0.4 + (0.15 * (currentLevel / 100));
+            } else {
+                roadWidthFactor = 0.5 + (0.25 * (currentLevel / 100));
+            }
+            roadWidth = Math.min(canvas.width * 0.7, canvas.width * roadWidthFactor);
+            roadX = (canvas.width - roadWidth) / 2;
+            
+            obstacles = [];
+            coinsOnRoad = [];
+            obstacleCounter = 0;
+            coinCounter = 0;
+            decorCounter = 0;
+            
+            initRoadMarkers();
+            initDecorItems();
+            initRainDrops();
+            
+            levelDisplay.textContent = `Level: ${currentLevel}/100`;
+            levelCompleteScreen.style.display = 'none';
+            racingLine.style.display = 'block';
+            minimap.style.display = 'block';
+            
+            // Start countdown
+            startCountdown();
+        }
+        
+        // Game loop
+        function gameLoop() {
+            if (!gameRunning || gamePaused) return;
+            
+            update();
+            render();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Update game state
+        function update() {
+            // Update player position
+            if (keys.left && playerCar.x > roadX + 10) {
+                playerCar.x -= playerCar.handling;
+                driftAngle = -1;
+            }
+            if (keys.right && playerCar.x < roadX + roadWidth - playerCar.width - 10) {
+                playerCar.x += playerCar.handling;
+                driftAngle = 1;
+            }
+            
+            // Apply brake if active
+            if (keys.brake) {
+                speed = Math.max(0, speed - brakePower);
+            } else {
+                // Increase speed up to max
+                if (speed < maxSpeed) {
+                    speed += acceleration * (playerCar.acceleration / 10);
+                }
+            }
+            
+            // Apply boost if active and available
+            if (keys.boost && boostAmount > 0) {
+                boostActive = true;
+                boostAmount = Math.max(0, boostAmount - boostConsumptionRate);
+                speed = Math.min(maxSpeed * boostMultiplier, speed + acceleration * 3);
+                
+                // Create boost particles
+                if (Math.random() < 0.3) {
+                    createParticle(
+                        playerCar.x + playerCar.width/2 + (Math.random() - 0.5) * playerCar.width/2,
+                        playerCar.y + playerCar.height,
+                        `rgb(255, ${Math.floor(100 + Math.random() * 155)}, 0)`
+                    );
+                }
+            } else {
+                boostActive = false;
+                // Recharge boost when not active
+                if (boostAmount < 100) {
+                    boostAmount = Math.min(100, boostAmount + boostRechargeRate);
+                }
+            }
+            
+            // Handle drift
+            if (keys.drift && speed > 50 && (keys.left || keys.right)) {
+                if (!driftActive) {
+                    driftActive = true;
+                    driftMultiplier = 1;
+                } else {
+                    driftMultiplier += 0.01;
+                    driftPoints += driftMultiplier * 0.1;
+                }
+                
+                // Create drift effects
+                if (Math.random() < 0.2) {
+                    createDriftEffect(
+                        playerCar.x + (driftAngle > 0 ? 0 : playerCar.width),
+                        playerCar.y + playerCar.height - 10,
+                        30, 30,
+                        `rgba(155, 89, 182, ${0.3 + Math.random() * 0.4})`
+                    );
+                }
+            } else {
+                if (driftActive) {
+                    // End of drift, add points
+                    score += Math.floor(driftPoints);
+                    driftActive = false;
+                    driftPoints = 0;
+                    driftMultiplier = 1;
+                }
+            }
+            
+            // Update boost gauge
+            boostFill.style.width = `${boostAmount}%`;
+            boostDisplay.textContent = `Boost: ${Math.round(boostAmount)}%`;
+            driftDisplay.textContent = `Drift: ${Math.floor(driftPoints)}x${driftMultiplier.toFixed(1)}`;
+            
+            // Update score based on speed
+            score += Math.floor(speed / 10);
+            scoreDisplay.textContent = `Score: ${score}`;
+            speedDisplay.textContent = `${Math.floor(speed)} km/h`;
+            
+            // Update road markers (create illusion of movement)
+            for (let i = 0; i < roadMarkers.length; i++) {
+                roadMarkers[i].y += speed / 5;
+                
+                // If marker goes off screen, move it to the top
+                if (roadMarkers[i].y > canvas.height) {
+                    roadMarkers[i].y = -markerHeight;
+                }
+            }
+            
+            // Update decor items
+            const env = environment;
+            for (let i = 0; i < decorItems.length; i++) {
+                decorItems[i].y += speed / 8;
+                
+                // If decor item goes off screen, move it to the top with new random x
+                if (decorItems[i].y > canvas.height * 1.5) {
+                    decorItems[i].y = -100 - Math.random() * canvas.height;
+                    decorItems[i].x = Math.random() < 0.5 ? 
+                        Math.random() * (roadX - 50) : 
+                        roadX + roadWidth + Math.random() * (canvas.width - roadX - roadWidth - 50);
+                }
+            }
+            
+            // Generate obstacles
+            obstacleCounter++;
+            if (obstacleCounter >= obstacleFrequency) {
+                createObstacle();
+                obstacleCounter = 0;
+                
+                // Increase difficulty
+                obstacleFrequency = Math.max(20, obstacleFrequency - (currentLevel / 10));
+            }
+            
+            // Generate coins
+            coinCounter++;
+            if (coinCounter >= coinFrequency) {
+                createCoin();
+                coinCounter = 0;
+            }
+            
+            // Generate decor items
+            decorCounter++;
+            if (decorCounter >= decorFrequency) {
+                decorCounter = 0;
+            }
+            
+            // Update obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].y += speed / 3;
+                
+                // Check collision
+                if (checkCollision(playerCar, obstacles[i])) {
+                    playerCar.health -= 10 / player.upgrades.armor;
+                    player.health = playerCar.health;
+                    
+                    if (playerCar.health <= 0) {
+                        gameOver();
+                        return;
+                    }
+                    
+                    obstacles.splice(i, 1);
+                    continue;
+                }
+                
+                // Remove obstacles that are off screen
+                if (obstacles[i].y > canvas.height) {
+                    obstacles.splice(i, 1);
+                }
+            }
+            
+            // Update coins
+            for (let i = coinsOnRoad.length - 1; i >= 0; i--) {
+                coinsOnRoad[i].y += speed / 3;
+                
+                // Check collection
+                if (checkCollision(playerCar, coinsOnRoad[i])) {
+                    const coinValue = 10 * player.upgrades.coinBonus;
+                    coins += coinValue;
+                    coinsEarnedThisRound += coinValue;
+                    updateCoinDisplay();
+                    
+                    // Create coin collection effect
+                    for (let j = 0; j < 5; j++) {
+                        createParticle(
+                            coinsOnRoad[i].x + coinsOnRoad[i].width/2,
+                            coinsOnRoad[i].y + coinsOnRoad[i].height/2,
+                            'gold'
+                        );
+                    }
+                    
+                    coinsOnRoad.splice(i, 1);
+                    continue;
+                }
+                
+                // Remove coins that are off screen
+                if (coinsOnRoad[i].y > canvas.height) {
+                    coinsOnRoad.splice(i, 1);
+                }
+            }
+            
+            // Update rain drops
+            if (weather === 'rain') {
+                for (let i = 0; i < rainDrops.length; i++) {
+                    rainDrops[i].y += rainDrops[i].speed;
+                    if (rainDrops[i].y > canvas.height) {
+                        rainDrops[i].y = -20;
+                        rainDrops[i].x = Math.random() * canvas.width;
+                    }
+                }
+            }
+            
+            // Level completion check (score-based)
+            if (score >= currentLevel * 500) {
+                levelComplete();
+            }
+        }
+        
+        // Render game
+        function render() {
+            const env = environment;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            ctx.fillStyle = isDayTime ? '#87CEEB' : env.bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw decor items
+            for (let i = 0; i < decorItems.length; i++) {
+                const item = decorItems[i];
+                ctx.fillStyle = item.color;
+                
+                // Different decor types based on environment
+                switch(item.type) {
+                    case "building":
+                        // Simple building
+                        ctx.fillRect(item.x, item.y, item.width, item.height);
+                        // Windows
+                        ctx.fillStyle = "#fff";
+                        for (let w = 0; w < 3; w++) {
+                            for (let h = 0; h < 3; h++) {
+                                ctx.fillRect(
+                                    item.x + 5 + w * (item.width / 3),
+                                    item.y + 5 + h * (item.height / 3),
+                                    5, 5
+                                );
+                            }
+                        }
+                        break;
+                    case "tree":
+                        // Tree with trunk and leaves
+                        ctx.fillStyle = "#8B4513";
+                        ctx.fillRect(item.x + item.width/2 - 3, item.y + item.height/2, 6, item.height/2);
+                        ctx.fillStyle = "#228B22";
+                        ctx.beginPath();
+                        ctx.arc(item.x + item.width/2, item.y + item.height/3, item.width/2, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                    case "cactus":
+                        // Cactus
+                        ctx.fillStyle = "#556B2F";
+                        ctx.fillRect(item.x + item.width/2 - 5, item.y, 10, item.height);
+                        // Arms
+                        ctx.fillRect(item.x + item.width/2 - 5, item.y + item.height/3, item.width/2, 10);
+                        break;
+                    case "rock":
+                        // Rock
+                        ctx.beginPath();
+                        ctx.arc(item.x + item.width/2, item.y + item.height/2, item.width/2, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                    case "palm":
+                        // Palm tree
+                        ctx.fillStyle = "#8B4513";
+                        ctx.fillRect(item.x + item.width/2 - 3, item.y + item.height/2, 6, item.height/2);
+                        ctx.fillStyle = "#27ae60";
+                        ctx.beginPath();
+                        ctx.arc(item.x + item.width/2, item.y + item.height/3, item.width/2, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                    default:
+                        // Default rectangle
+                        ctx.fillRect(item.x, item.y, item.width, item.height);
+                }
+            }
+            
+            // Draw road
+            ctx.fillStyle = env.roadColor;
+            ctx.fillRect(roadX, 0, roadWidth, canvas.height);
+            
+            // Draw road markers
+            ctx.fillStyle = env.roadMarking;
+            for (let i = 0; i < roadMarkers.length; i++) {
+                ctx.fillRect(
+                    roadMarkers[i].x,
+                    roadMarkers[i].y,
+                    roadMarkers[i].width,
+                    roadMarkers[i].height
+                );
+            }
+            
+            // Draw coins
+            for (let i = 0; i < coinsOnRoad.length; i++) {
+                const coin = coinsOnRoad[i];
+                
+                // Coin glow effect
+                ctx.shadowColor = 'gold';
+                ctx.shadowBlur = 10;
+                
+                ctx.fillStyle = 'gold';
+                ctx.beginPath();
+                ctx.arc(coin.x + coin.width/2, coin.y + coin.height/2, coin.width/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#daa520';
+                ctx.beginPath();
+                ctx.arc(coin.x + coin.width/2, coin.y + coin.height/2, coin.width/3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Reset shadow
+                ctx.shadowBlur = 0;
+            }
+            
+            // Draw obstacles
+            for (let i = 0; i < obstacles.length; i++) {
+                const obstacle = obstacles[i];
+                
+                // Draw 3D obstacle car
+                draw3DCar(
+                    ctx,
+                    obstacle.x,
+                    obstacle.y,
+                    obstacle.width,
+                    obstacle.height,
+                    obstacle.color,
+                    obstacle.topColor
+                );
+            }
+            
+            // Draw player car with 3D effect
+            const car = cars[player.currentCar];
+            draw3DCar(
+                ctx,
+                playerCar.x,
+                playerCar.y,
+                playerCar.width,
+                playerCar.height,
+                car.color,
+                car.topColor,
+                boostActive
+            );
+            
+            // Health bar
+            const healthPercent = playerCar.health / 100;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(
+                playerCar.x, 
+                playerCar.y - 15, 
+                playerCar.width, 
+                5
+            );
+            ctx.fillStyle = healthPercent > 0.5 ? '#2ecc71' : healthPercent > 0.2 ? '#f39c12' : '#e74c3c';
+            ctx.fillRect(
+                playerCar.x, 
+                playerCar.y - 15, 
+                playerCar.width * healthPercent, 
+                5
+            );
+            
+            // Draw rain
+            if (weather === 'rain') {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < rainDrops.length; i++) {
+                    const drop = rainDrops[i];
+                    ctx.beginPath();
+                    ctx.moveTo(drop.x, drop.y);
+                    ctx.lineTo(drop.x, drop.y + drop.length);
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw minimap
+            renderMinimap();
+        }
+        
+        // Draw 3D car
+        function draw3DCar(ctx, x, y, width, height, color, topColor, isBoosting = false) {
+            // Car shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(
+                x + width/2, 
+                y + height, 
+                width/2, 
+                width/4, 
+                0, 0, Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Car body
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(
+                x, 
+                y, 
+                width, 
+                height, 
+                [5, 5, 0, 0]
+            );
+            ctx.fill();
+            
+            // Car top
+            ctx.fillStyle = topColor;
+            ctx.beginPath();
+            ctx.roundRect(
+                x + width * 0.1, 
+                y - height * 0.2, 
+                width * 0.8, 
+                height * 0.5, 
+                [5, 5, 0, 0]
+            );
+            ctx.fill();
+            
+            // Car windows
+            ctx.fillStyle = 'rgba(200, 230, 255, 0.5)';
+            ctx.fillRect(
+                x + width * 0.15, 
+                y - height * 0.15, 
+                width * 0.3, 
+                height * 0.3
+            );
+            ctx.fillRect(
+                x + width * 0.55, 
+                y - height * 0.15, 
+                width * 0.3, 
+                height * 0.3
+            );
+            
+            // Car wheels
+            ctx.fillStyle = '#222';
+            ctx.beginPath();
+            ctx.arc(
+                x + width * 0.25, 
+                y + height * 0.8, 
+                width * 0.15, 
+                0, Math.PI * 2
+            );
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(
+                x + width * 0.75, 
+                y + height * 0.8, 
+                width * 0.15, 
+                0, Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Car wheel details
+            ctx.fillStyle = '#555';
+            ctx.beginPath();
+            ctx.arc(
+                x + width * 0.25, 
+                y + height * 0.8, 
+                width * 0.1, 
+                0, Math.PI * 2
+            );
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(
+                x + width * 0.75, 
+                y + height * 0.8, 
+                width * 0.1, 
+                0, Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Car wheel rims
+            ctx.fillStyle = '#888';
+            ctx.beginPath();
+            ctx.arc(
+                x + width * 0.25, 
+                y + height * 0.8, 
+                width * 0.05, 
+                0, Math.PI * 2
+            );
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(
+                x + width * 0.75, 
+                y + height * 0.8, 
+                width * 0.05, 
+                0, Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Car lights
+            ctx.fillStyle = isDayTime ? '#666' : '#ff0';
+            ctx.beginPath();
+            ctx.arc(
+                x + 5, 
+                y + height * 0.3, 
+                5, 
+                0, Math.PI * 2
+            );
+            ctx.fill();
+            
+            ctx.fillStyle = '#f00';
+            ctx.beginPath();
+            ctx.arc(
+                x + width - 5, 
+                y + height * 0.5, 
+                5, 
+                0, Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Car details
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillRect(
+                x + width * 0.4, 
+                y + height * 0.1, 
+                width * 0.2, 
+                3
+            );
+            
+            // Boost effect
+            if (isBoosting) {
+                // Draw two layers of fire
+                for (let layer = 0; layer < 2; layer++) {
+                    const layerHeight = height / (layer + 2);
+                    const layerOffset = layer * 10;
+                    
+                    ctx.fillStyle = layer === 0 ? '#ff9900' : '#ff3300';
+                    ctx.beginPath();
+                    ctx.ellipse(
+                        x + width/2, 
+                        y + height + layerOffset, 
+                        width/4, 
+                        layerHeight, 
+                        0, 0, Math.PI * 2
+                    );
+                    ctx.fill();
+                }
+                
+                // Particles
+                for (let i = 0; i < 10; i++) {
+                    const px = x + width/2 + (Math.random() - 0.5) * width/2;
+                    const py = y + height + 30 + Math.random() * 30;
+                    const size = 1 + Math.random() * 4;
+                    const alpha = 0.5 + Math.random() * 0.5;
+                    
+                    // Random color between yellow and red
+                    const color = `rgba(255, ${Math.floor(100 + Math.random() * 155)}, 0, ${alpha})`;
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(px, py, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+        
+        // Render minimap
+        function renderMinimap() {
+            minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+            
+            // Draw road
+            minimapCtx.fillStyle = '#555';
+            minimapCtx.fillRect(
+                0, 
+                0, 
+                minimapCanvas.width, 
+                minimapCanvas.height
+            );
+            
+            // Draw player position
+            minimapCtx.fillStyle = '#e74c3c';
+            minimapCtx.fillRect(
+                minimapCanvas.width/2 - 3, 
+                minimapCanvas.height - 10, 
+                6, 
+                6
+            );
+            
+            // Draw obstacles
+            minimapCtx.fillStyle = '#3498db';
+            for (let i = 0; i < obstacles.length; i++) {
+                const obstacle = obstacles[i];
+                const yPos = minimapCanvas.height - (obstacle.y / canvas.height * minimapCanvas.height);
+                if (yPos > 0) {
+                    minimapCtx.fillRect(
+                        minimapCanvas.width/2 - 2, 
+                        yPos, 
+                        4, 
+                        4
+                    );
+                }
+            }
+            
+            // Draw coins
+            minimapCtx.fillStyle = 'gold';
+            for (let i = 0; i < coinsOnRoad.length; i++) {
+                const coin = coinsOnRoad[i];
+                const yPos = minimapCanvas.height - (coin.y / canvas.height * minimapCanvas.height);
+                if (yPos > 0) {
+                    minimapCtx.beginPath();
+                    minimapCtx.arc(
+                        minimapCanvas.width/2, 
+                        yPos, 
+                        2, 
+                        0, Math.PI * 2
+                    );
+                    minimapCtx.fill();
+                }
+            }
+            
+            // Draw border
+            minimapCtx.strokeStyle = '#fff';
+            minimapCtx.lineWidth = 2;
+            minimapCtx.strokeRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+        }
+        
+        // Create a new obstacle
+        function createObstacle() {
+            const width = 40 + Math.random() * 40;
+            const height = 40 + Math.random() * 40;
+            const x = roadX + 10 + Math.random() * (roadWidth - width - 20);
+            
+            // Select a random car for the obstacle
+            const car = cars[Math.floor(Math.random() * cars.length)];
+            
+            obstacles.push({
+                x: x,
+                y: -height,
+                width: width,
+                height: height,
+                color: car.color,
+                topColor: car.topColor
+            });
+        }
+        
+        // Create a new coin
+        function createCoin() {
+            const size = 20 + Math.random() * 10;
+            const x = roadX + 20 + Math.random() * (roadWidth - 40 - size);
+            
+            coinsOnRoad.push({
+                x: x,
+                y: -size,
+                width: size,
+                height: size
+            });
+        }
+        
+        // Check collision between two objects
+        function checkCollision(obj1, obj2) {
+            return obj1.x < obj2.x + obj2.width &&
+                   obj1.x + obj1.width > obj2.x &&
+                   obj1.y < obj2.y + obj2.height &&
+                   obj1.y + obj1.height > obj2.y;
+        }
+        
+        // Update coin display
+        function updateCoinDisplay() {
+            coinDisplay.textContent = `Coins: ${coins}`;
+        }
+        
+        // Level complete
+        function levelComplete() {
+            gameRunning = false;
+            racingLine.style.display = 'none';
+            minimap.style.display = 'none';
+            
+            // Update level progress
+            player.levelProgress = Math.max(player.levelProgress, currentLevel + 1);
+            
+            // Bonus coins for level completion
+            const bonusCoins = currentLevel * 50 * player.upgrades.coinBonus;
+            coins += bonusCoins;
+            coinsEarnedThisRound += bonusCoins;
+            player.coins = coins;
+            player.health = playerCar.health;
+            savePlayerData();
+            
+            levelCoinsEarnedElement.textContent = coinsEarnedThisRound;
+            totalCoinsDisplay.textContent = coins;
+            completedLevelElement.textContent = currentLevel;
+            
+            // Update level progress display
+            updateLevelProgress();
+            
+            levelCompleteScreen.style.display = 'flex';
+        }
+        
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            racingLine.style.display = 'none';
+            minimap.style.display = 'none';
+            
+            // Earn coins based on score
+            const earnedCoins = Math.floor(score / 10) * player.upgrades.coinBonus;
+            coins += earnedCoins;
+            player.coins = coins;
+            player.health = playerCar.health;
+            savePlayerData();
+            
+            // Update high score
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('racingGameHighScore', highScore.toString());
+            }
+            
+            finalScoreElement.textContent = score;
+            coinsEarnedElement.textContent = earnedCoins;
+            finalLevelElement.textContent = currentLevel;
+            document.getElementById('highScoreDisplay').textContent = highScore;
+            
+            gameOverScreen.style.display = 'flex';
+        }
+        
+        // Initialize the game
+        initGame();
+    </script>
+</body>
+</html>
